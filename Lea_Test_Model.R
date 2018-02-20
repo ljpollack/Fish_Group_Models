@@ -1,3 +1,4 @@
+rm(list=ls())
 library(rethinking)
 library(tidyverse)
 
