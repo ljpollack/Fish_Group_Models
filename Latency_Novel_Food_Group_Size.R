@@ -25,7 +25,7 @@ theme_custom <-
 
 
 # read data
-d <- readxl::read_xlsx("GroupSizeNovelAssay_FinalDataSheet_BitesFood.xlsx")
+d <- read_csv("GroupSizeNovelAssay_FinalDataSheet_BitesFood.csv")
 
 # gather the latency measurements together
 d <- gather(d, key = "individual", value = "latency", 8:15)
