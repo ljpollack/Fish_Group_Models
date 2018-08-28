@@ -1,4 +1,4 @@
-rm(list=ls())
+#rm(list=ls())
 library(rethinking)
 library(tidyverse)
 
@@ -23,13 +23,15 @@ m1 <- map2stan(
   alist(
     # likeliood
     latency ~ dpois(lambda),
-    # linear models
+    # top-level linear model, where we write down all the predictors and interactions
     log(lambda) <- A + BM*mean_size + BS*sd_size + BMS*mean_size*sd_size,
+    # now the sub-models, where we take the intercept and slope and decompose them into their grand means (a, bm, bs, bms) and the "offsets" that occur with each grouping (group or trial)
     A <- a + a_group_id[group_id] + a_trial[trial_number],
     BM <- bm + bm_group_id[group_id],
     BS <- bs + bm_group_id[group_id],
     BMS <- bms + bms_group_id[group_id],
     # adaptive priors
+    # this first one is a 4-dimensional multivariate normal prior, where you're saying that within a group_id, the varying intercepts and varying slopes are correlated based on Rho
     c(a_group_id,bm_group_id,bm_group_id,bms_group_id)[group_id] ~
       dmvnorm2(0,sigma_group_id,Rho_group_id),
     a_trial[trial_number] ~ dnorm(0, sigma_trial),
@@ -41,7 +43,7 @@ m1 <- map2stan(
   ) , data=data , iter=5000 , warmup=1000 , chains=2 , cores=2 )
   
 
-# hell yes this works!
+# hell yes this works! however, we've got a lot of divergent chains, so I think it's worth implementing the non-centered paramaterization
 
 
 p <- precis(m1)
@@ -62,3 +64,38 @@ pdat[80:120,] %>% ggplot(aes(x=Mean, y=param))+
 
 pdat[120:160,] %>% ggplot(aes(x=Mean, y=param))+
   geom_point()
+
+precis(m1)
+compare(m1)
+
+
+
+# let's try the non-centered paramaterization
+
+m1.NC <- map2stan(
+  alist(
+    # likeliood
+    latency ~ dpois(lambda),
+    # top-level linear model, where we write down all the predictors and interactions
+    log(lambda) <- A + BM*mean_size + BS*sd_size + BMS*mean_size*sd_size,
+    # now the sub-models, where we take the intercept and slope and decompose them into their grand means (a, bm, bs, bms) and their varying intercepts (for A) and varying slopes (for the beta values)
+    A <- a + a_group_id[group_id] + a_trial[trial_number],
+    BM <- bm + bm_group_id[group_id],
+    BS <- bs + bm_group_id[group_id],
+    BMS <- bms + bms_group_id[group_id],
+    # adaptive priors
+    # this first one is a 4-dimensional multivariate normal prior, where you're saying that within a group_id, the varying intercepts and varying slopes are correlated based on Rho
+    c(a_group_id,bm_group_id,bm_group_id,bms_group_id)[group_id] ~
+      dmvnormNC(sigma_group_id,Rho_group_id),
+    a_trial[trial_number] ~ dnorm(0, sigma_trial),
+    # fixed priors
+    c(a,bm,bs,bms) ~ dnorm(0,1),
+    sigma_group_id ~ dcauchy(0,2),
+    sigma_trial ~ dcauchy(0,2),
+    Rho_group_id ~ dlkjcorr(4)
+  ) , data=data , iter=5000 , warmup=1000 , chains=2 , cores=2 )
+
+par(mfrow=c(1,1))
+plot(precis(m1.NC, depth = 2))
+WAIC(m1.NC)
+compare(m1,m1.NC)
