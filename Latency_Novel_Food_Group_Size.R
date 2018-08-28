@@ -60,29 +60,8 @@ d %>%
   filter(!is.na(latency)) %>% 
   summarise(mean_latency = mean(latency), n = n())
 
-# let's fit a model!
-
+# let's fit a model! keeping adapt_delta and max_treedepth high
 model_1 <- brm(data = d, family = poisson, 
-    latency ~ 1 + treatment +
-    (1 + treatment | group_ID) +
-    (1 + treatment | tank) +
-    (1 + treatment | trial),
-    prior = c(set_prior("normal(0, 1)", class = "Intercept"),
-              set_prior("normal(0, 1)", class = "b"),
-              set_prior("cauchy(0, 2)", class = "sd"),
-              set_prior("lkj(4)", class = "cor")),
-    iter = 5000, warmup = 1000, chains = 3, cores = 3, control = list(adapt_delta = 0.9))
-BRRR::skrrrahh(36)
-
-summary(model_1)
-
-plot(model_1, pars = c("treatment"))
-launch_shinystan(model_1)
-
-# too many divergent transitions, gotta increase adapt_delta
-
-# also gonna include trial as a predictor, not as a pooling variable, because I don't think trial is a "replaceable index value" we can pool across
-model_2 <- brm(data = d, family = poisson, 
                latency ~ 1 + treatment + trial +
                  (1 + treatment + trial | group_ID) +
                  (1 + treatment + trial | tank),
@@ -90,30 +69,5 @@ model_2 <- brm(data = d, family = poisson,
                          set_prior("normal(0, 1)", class = "b"),
                          set_prior("cauchy(0, 2)", class = "sd"),
                          set_prior("lkj(4)", class = "cor")),
-               iter = 5000, warmup = 1000, chains = 3, cores = 3, control = list(adapt_delta = 0.9))
-BRRR::skrrrahh(36)
-
-model_3 <- brm(data = d, family = poisson, 
-               latency ~ 1 + treatment + trial +
-                 (1 + treatment + trial | group_ID) +
-                 (1 + treatment + trial | tank),
-               prior = c(set_prior("normal(0, 1)", class = "Intercept"),
-                         set_prior("normal(0, 1)", class = "b"),
-                         set_prior("cauchy(0, 2)", class = "sd"),
-                         set_prior("lkj(4)", class = "cor")),
-               iter = 5000, warmup = 1000, chains = 3, cores = 3, control = list(adapt_delta = 0.95, max_treedepth = 15))
-BRRR::skrrrahh(36)
-
-launch_shinystan(model_3)
-
-# still some divergent transitions, one more shot!
-model_3 <- brm(data = d, family = poisson, 
-               latency ~ 1 + treatment + trial +
-                 (1 + treatment + trial | group_ID) +
-                 (1 + treatment + trial | tank),
-               prior = c(set_prior("normal(0, 1)", class = "Intercept"),
-                         set_prior("normal(0, 1)", class = "b"),
-                         set_prior("cauchy(0, 2)", class = "sd"),
-                         set_prior("lkj(4)", class = "cor")),
-               iter = 5000, warmup = 1000, chains = 3, cores = 3, control = list(adapt_delta = 0.99, max_treedepth = 15))
+               iter = 5000, warmup = 1000, chains = 3, cores = 3, control = list(adapt_delta = 0.99, max_treedepth = 15), save_model = "stan_model_1")
 BRRR::skrrrahh(36)
