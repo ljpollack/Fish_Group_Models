@@ -1,5 +1,5 @@
 # this is a test script, gonna see if I can make this script run with a bash script that then pushes to github
-
+pdf(NULL)
 library(tidyverse)
 
 # read data
