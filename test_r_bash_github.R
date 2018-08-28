@@ -30,3 +30,7 @@ d %>%
   geom_jitter(color = "black", stroke = 0, size = 2.1, alpha = 0.1, fill = "transparent")
 
 ggsave("images/violin_plot_latency_data.jpg")
+
+system("git add .")
+system("git commit -a -m 'trying it in the R script itself'")
+system("git push")
