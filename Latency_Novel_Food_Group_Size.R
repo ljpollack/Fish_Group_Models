@@ -71,3 +71,7 @@ model_1 <- brm(data = d, family = poisson,
                          set_prior("lkj(4)", class = "cor")),
                iter = 5000, warmup = 1000, chains = 3, cores = 3, control = list(adapt_delta = 0.99, max_treedepth = 15), save_model = "stan_model_1")
 BRRR::skrrrahh(36)
+
+system("git add .")
+system("git commit -a -m 'trying the model and pushing to github'")
+system("git push")
