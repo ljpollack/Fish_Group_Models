@@ -33,4 +33,4 @@ ggsave("images/violin_plot_latency_data.jpg")
 
 system("git add .")
 system("git commit -a -m 'trying it in the R script itself'")
-system("git push")
+system()
