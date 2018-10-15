@@ -15,8 +15,8 @@
 # set max memory to 8gb per process
 #sbatch --mem-per-cpu=8000
 
-# set max wall time to 48 hours
-#SBATCH --time=48:00:00
+# set max wall time to 480 hours
+#SBATCH --time=480:00:00
 
 # set the name of the job
 #SBATCH --job-name=fish_model
@@ -37,4 +37,4 @@ cd $SLURM_SUBMIT_DIR
 # load NetLogo
 module load R
 
-Rscript scripts/latency_group_size_farm.R
+Rscript scripts/latency_group_size_censored_farm.R
