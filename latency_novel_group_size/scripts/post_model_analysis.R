@@ -295,8 +295,118 @@ spag %>%
   ggtitle("marginal effects of poisson multilevel model") +
   ylab("estimated latency")
 
+
+
+#### BEST MODEL ####
+# model 6 is a hurdle-negative binomial model
+# data were transformed such that no observation of movement is recorded as a 0, with the fastest actual recorded movement is a latency of 1
+# then, a hurdle model is used to account for the 0s, which indicate no observation
+# once that "hurdle" is cleared, positive values are modeled as a negative binomial
+model_6 <- readRDS("latency_novel_group_size/fit_models/model_6_fit.rds")
+
+model_6$family
+
+launch_shinystan(model_6)
+
+waic(model_5, model_6)
+
+
+ps <- posterior_summary(model_6)
+str(ps)
+ps <- unlist(ps)
+ps <- as.data.frame(ps)
+ps
+ps2 <- ps %>%
+  head(n=15) 
+ps2 <- ps2 %>% 
+  mutate(variable = rownames(ps2))
+ps2 %>% 
+  ggplot(aes(y=Estimate, x = variable))+
+  geom_pointrange(aes(ymin=Q2.5, ymax=Q97.5, group=variable), size = 2/5, shape = 20) +
+  geom_hline(yintercept=0, color = "gray25", alpha = 0.25) +
+  coord_flip() +
+  custom_minimal_theme() +
+  ggtitle("parameter estimates for model 1 with 95% credible intervals")
+ggsave("latency_novel_group_size/images/hurd_nbin_parameter_plot.jpg", width = 5, height = 5)
+
+preds <- posterior_samples(model_6, pars = ps2$variable)
+str(preds)
+
+preds <- as.tibble(preds)
+preds <- preds %>% 
+  gather(key = "variable", value = "estimate")
+
+plot_dens <- preds %>% 
+  ggplot(aes(x=estimate, y = variable)) +
+  geom_density_ridges(fill = NA, color = "black") +
+  geom_vline(xintercept = 0, color = "black", linetype = 2)
+
+plot_dens + custom_minimal_theme() + ggtitle("Parameter Density Estimates")
+ggsave("latency_novel_group_size/images/hurd_nbin_parameter_dens_plot.jpg", width = 5, height = 5)
+
+dfp <- ggpredict(model_6, terms = c("treatment", "trial"), type = "re") %>% 
+  mutate(trial = group) %>% 
+  mutate(group = NULL)
+
+
+dfp %>% 
+  ggplot(aes(x=x, y=predicted, color=trial)) +
+  geom_line() +
+  geom_ribbon(aes(ymin=conf.low, ymax=conf.high, fill = trial), color = "transparent", alpha = 0.1) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d
+
+
+int_conditions <- list(
+  trial = setNames(c(1,2,3), c("trial 1", "trial 2", "trial 3")),
+  treatment = 2:8)
+int_conditions
+
+
+effects <- marginal_effects(model_6, effects = "treatment:trial", int_conditions = int_conditions)
+effects <- effects$`treatment:trial`
+
+effects %>% 
+  ggplot(aes(x=treatment, y=estimate__, color=trial)) +
+  geom_line() +
+  geom_ribbon(aes(ymin=lower__, ymax=upper__, fill = trial), color = "transparent", alpha = 0.1) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  custom_minimal_theme() +
+  ggtitle("marginal effects of hurdle-nbinom multilevel model") +
+  ylab("estimated latency")
+ggsave("latency_novel_group_size/images/hurd_nbin_marginal.jpg", width = 5, height = 5)
+# spaghetti plots
+
+effects2 <- marginal_effects(model_6, effects = "treatment:trial", int_conditions = int_conditions, spaghetti = T, nsamples = 300)
+
+
+spag <- attributes(effects2$`treatment:trial`)$spaghetti
+
+spag <- as.tibble(spag)
+
+
+spag_plot <- spag %>% 
+  ggplot(aes(x=treatment, y=estimate__, color=trial)) +
+  geom_line(aes(group=sample__), alpha = 0.1) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  custom_minimal_theme() +
+  ggtitle("marginal effects of hurdle-nbin multilevel model") +
+  ylab("estimated latency")
+spag_plot
+ggsave("latency_novel_group_size/images/hurd_nbin_spaghetti.jpg", width = 5, height = 5)
+
+plotly::ggplotly(spag_plot)
+
+
+
 #### Redoing stuff
 
+
+years <- c(2000,2001,2002,2013)
+
+lubridate::ymd(years, truncated = 2L)
 
 
 
