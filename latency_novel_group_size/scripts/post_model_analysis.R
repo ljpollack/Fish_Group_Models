@@ -304,7 +304,29 @@ spag %>%
 # once that "hurdle" is cleared, positive values are modeled as a negative binomial
 model_6 <- readRDS("latency_novel_group_size/fit_models/model_6_fit.rds")
 
+# plot a barplot of frequency of zeroes (fish that never move) across each treatment, see if there's really any effect there
+
+model_6$data
+
+source("figure_generating_functions.R")
+
+p <- marginal_effects_plot(model = model_6, effects = c("trial"), effect_types = c("categorical"))
+p
+
+p <- param_estimate_plot(model_6, 4)
+p + xlab("estimated value") + ylab("parameter") + minimal_ggplot_theme()
+ggsave("latency_novel_group_size/images/hurd_nbin_parameter_plot.jpg")
+
+# figure out how to pull out the hurdle part of the model, maybe use marginal effects with a different resp=
+
+# worst comes to worst, open an issue for brms
+
+  
+marginal_effects(model_6)
+
+
 model_6$family
+summary(model_6)
 
 launch_shinystan(model_6)
 
@@ -357,8 +379,12 @@ dfp %>%
   scale_color_viridis_d
 
 
+# int_conditions <- list(
+#   trial = setNames(c(1,2,3), c("trial 1", "trial 2", "trial 3")),
+#   treatment = 2:8)
+
 int_conditions <- list(
-  trial = setNames(c(1,2,3), c("trial 1", "trial 2", "trial 3")),
+  trial = unique(model_6$data[["trial"]]),
   treatment = 2:8)
 int_conditions
 
@@ -372,7 +398,7 @@ effects %>%
   geom_ribbon(aes(ymin=lower__, ymax=upper__, fill = trial), color = "transparent", alpha = 0.1) +
   scale_fill_viridis_d() +
   scale_color_viridis_d() +
-  custom_minimal_theme() +
+  minimal_ggplot_theme() +
   ggtitle("marginal effects of hurdle-nbinom multilevel model") +
   ylab("estimated latency")
 ggsave("latency_novel_group_size/images/hurd_nbin_marginal.jpg", width = 5, height = 5)
@@ -401,15 +427,77 @@ plotly::ggplotly(spag_plot)
 
 
 
-#### Redoing stuff
+#### novel food latency stuff now ####
+novel_fit <- readRDS("latency_novel_group_size/fit_models/fit_latency_group_size_novel_hur_nbin_farm.rds")
 
 
-years <- c(2000,2001,2002,2013)
+p <- param_estimate_plot(model_6, 4)
+p + xlab("estimated value") + ylab("parameter") + minimal_ggplot_theme()
+ggsave("latency_novel_group_size/images/latency_novel_parameters.jpg")
 
-lubridate::ymd(years, truncated = 2L)
 
 
 
+launch_shinystan(novel_fit)
+
+plot(marginal_effects(novel_fit, effects = "novel_food"))
+
+int_conditions <- list(
+  novel_food = setNames(c("bead","brine","plastic"), c("bead","brine","plastic")),
+  treatment = 2:8)
+
+effects <- marginal_effects(novel_fit, effects = "treatment:novel_food", int_conditions = int_conditions, spaghetti = T, nsamples = 300)
+spag <- attributes(effects$`treatment:novel_food`)$spaghetti %>% as.tibble()
+
+spag %>% 
+  ggplot(aes(x=treatment, y=estimate__, color=novel_food)) +
+  geom_line(aes(group=sample__), alpha = 0.1) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  minimal_ggplot_theme() +
+  ggtitle("marginal effects of hurdle-nbin multilevel model") +
+  ylab("estimated latency")
+
+ps <- posterior_summary(novel_fit) %>% unlist() %>% as.data.frame()
+
+ps2 <- ps %>%
+  head(n=4) 
+ps2 <- ps2 %>% 
+  mutate(variable = rownames(ps2))
+ps2 %>% 
+  ggplot(aes(y=Estimate, x = variable))+
+  geom_pointrange(aes(ymin=Q2.5, ymax=Q97.5, group=variable), size = 2/5, shape = 20) +
+  geom_hline(yintercept=0, color = "gray25", alpha = 0.25) +
+  coord_flip() +
+  minimal_ggplot_theme() +
+  ggtitle("parameter estimates for model 1 with 95% credible intervals")
+
+preds <- posterior_samples(novel_fit, pars = ps2$variable) %>% as.tibble()
+preds <- preds %>% 
+  gather(key = "variable", value = "estimate")
+
+plot_dens <- preds %>% 
+  ggplot(aes(x=estimate, y = variable)) +
+  geom_density_ridges(fill = NA, color = "black") +
+  geom_vline(xintercept = 0, color = "black", linetype = 2)
+
+plot_dens + minimal_ggplot_theme() + ggtitle("Parameter Density Estimates")
+ggsave("latency_novel_group_size/images/latency_novel_half_data_parameters.jpg")
+
+effects <- marginal_effects(novel_fit, effects = "treatment:novel_food", int_conditions = int_conditions)
+effects <- effects$`treatment:novel_food`
+
+effects %>% 
+  ggplot(aes(x=treatment, y=estimate__, color=novel_food)) +
+  geom_line() +
+  geom_ribbon(aes(ymin=lower__, ymax=upper__, fill = novel_food), color = "transparent", alpha = 0.1) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  minimal_ggplot_theme() +
+  ggtitle("marginal effects of hurdle nbin multilevel model") +
+  ylab("estimated latency") + xlab("group size")
+
+ggsave("latency_novel_group_size/images/latency_novel_half_data_marginal_effects.jpg")
 
 # # read data
 # d <- read_csv("GroupSizeNovelAssay_FinalDataSheet_BitesFood.csv")
