@@ -10,8 +10,7 @@ library(ggExtra)
 library(ggeffects)
 library(broom)
 library(ggridges)
-
-source("../../minimal_ggplot_theme.R")
+library(MCMsBasics)
 
 # make a custom theme
 
@@ -428,15 +427,14 @@ plotly::ggplotly(spag_plot)
 
 
 #### novel food latency stuff now ####
-novel_fit <- readRDS("latency_novel_group_size/fit_models/fit_latency_group_size_novel_hur_nbin_farm.rds")
+novel_fit <- readRDS("latency_novel_group_size/fit_models/full_data_fit_latency_group_size_novel_hur_nbin_farm.rds")
 
 
-p <- param_estimate_plot(model_6, 4)
-p + xlab("estimated value") + ylab("parameter") + minimal_ggplot_theme()
-ggsave("latency_novel_group_size/images/latency_novel_parameters.jpg")
+# p <- param_estimate_plot(model_6, 4)
+# p + xlab("estimated value") + ylab("parameter") + minimal_ggplot_theme()
+# ggsave("latency_novel_group_size/images/latency_novel_parameters.jpg")
 
-
-
+novel_fit$data
 
 launch_shinystan(novel_fit)
 
@@ -472,6 +470,8 @@ ps2 %>%
   minimal_ggplot_theme() +
   ggtitle("parameter estimates for model 1 with 95% credible intervals")
 
+ggsave("latency_novel_group_size/images/latency_novel_full_data_dot_parameters.jpg")
+
 preds <- posterior_samples(novel_fit, pars = ps2$variable) %>% as.tibble()
 preds <- preds %>% 
   gather(key = "variable", value = "estimate")
@@ -482,7 +482,7 @@ plot_dens <- preds %>%
   geom_vline(xintercept = 0, color = "black", linetype = 2)
 
 plot_dens + minimal_ggplot_theme() + ggtitle("Parameter Density Estimates")
-ggsave("latency_novel_group_size/images/latency_novel_half_data_parameters.jpg")
+ggsave("latency_novel_group_size/images/latency_novel_full_data_parameters.jpg")
 
 effects <- marginal_effects(novel_fit, effects = "treatment:novel_food", int_conditions = int_conditions)
 effects <- effects$`treatment:novel_food`
@@ -497,7 +497,7 @@ effects %>%
   ggtitle("marginal effects of hurdle nbin multilevel model") +
   ylab("estimated latency") + xlab("group size")
 
-ggsave("latency_novel_group_size/images/latency_novel_half_data_marginal_effects.jpg")
+ggsave("latency_novel_group_size/images/latency_novel_full_data_marginal_effects.jpg")
 
 # # read data
 # d <- read_csv("GroupSizeNovelAssay_FinalDataSheet_BitesFood.csv")
