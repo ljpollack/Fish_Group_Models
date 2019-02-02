@@ -8,7 +8,7 @@ These are some first stabs at Bayesian GLMMs for fish group personality data lov
 
 1) ~~pull all models down from FARM~~
 2) compartmentalize by specific model to be fitted
-3) make sure FARM and local relative paths for model scripts match so we can run the FARM `.R` scripts locally to test
+3) make sure FARM and local relative paths for model scripts match so we can run the FARM `.R` scripts locally to test 
 
 ### FARM Transfer
 
@@ -16,7 +16,7 @@ These are some first stabs at Bayesian GLMMs for fish group personality data lov
 2) take file from FARM pulled folder, clean it up (put in new STDOUT, make sure directories look good, take out data cleaning elements and transfer them to data cleaning scripts)
 3) when file is cleaned, put it into a new folder that will have the correct cleaned structure
 4) when all the files are cleaned and put into new structure, you can take that whole new structure and replace the local repo's "files for farm" folder
-5) from here, transfer the proper files from the local repo "files for farm **into the non-farm folders, so the models match between "files for farm** and everywhere else
+5) from here, transfer the proper files from the local repo "files for farm** into the non-farm folders, so the models match between "files for farm** and everywhere else
 
 **actually, should consider just making the files match exactly. one version on the local repo, push this to the FARM, anything that gets pulled back with changes gets pulled directly on top of the local file. keeps everything the same between both places**
 
@@ -58,9 +58,9 @@ Model Info:
 
 ## Chases
 
-### Number of Chases
+### Number of Chases 
 
-#### *BEST MODEL:*
+#### *BEST MODEL:* 
 ```
 ```
 Model Info:
@@ -73,9 +73,9 @@ Model Info:
 
 # To-Do Models
 
-1) In latency models, add explicit predictors for the hurdle portion
-2) Latency post-predator cue
+1) Latency post-predator cue
     - same structure as the latency for known food model
+2) In latency models, add explicit predictors for the hurdle portion
 3) Look for correlation between aggression (chase count) and % food eaten
     - predictor would be aggression
     - so we'll add aggression into a % of food eaten model
@@ -86,7 +86,6 @@ Model Info:
     - problem here is can't use nbinom model because we don't have integers any more
     - should plot these data and look at the per-capita rate
     - look into using something like `numchases | trials(group_size)`, like in the aggregated binomial model of % food eaten, this would be instead of a per-capita numchase value
-4) Try to calculate repeatability value for within-group in chase and food eaten models, maybe latency too.
 
 # Other To-Do
 
